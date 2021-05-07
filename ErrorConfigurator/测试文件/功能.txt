@@ -1,0 +1,12 @@
+功能解释:
+     对文件的错误进行高亮,或者导出(支持.md格式,.doc/.docx格式)
+
+整个项目文件,在run
+
+
+几个测试用的文件
+aa.md
+error1.md
+wa.md
+testfile
+testfile2
