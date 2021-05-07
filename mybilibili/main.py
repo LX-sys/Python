@@ -327,8 +327,6 @@ class MyBili(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
-
     ui = MyBili()
     ui.show()
-
     sys.exit(app.exec_())
