@@ -83,7 +83,7 @@ def fileDownload(homeurl, url, title, typ):
     print("大小: ",temp)
 
 def main():
-    print("欢迎来到bilibili爬资源小程序，接下来让我们开始吧\n(番剧爬取程序正在持续开发中...)")
+    print("bilibili")
     bv=input("输入视频bv号: ")
     judge = input("你想获得一系列(y)视频还是一个单一(N)视频?\n[y/N]\n")
     if judge == "y" or judge == "Y":
