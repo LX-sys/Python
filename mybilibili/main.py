@@ -19,8 +19,10 @@ from QSS import QSS
 from titlePage import TitlePage
 import re
 import os
-print(sys.version)
+import time
 
+# 获取当前操作系统
+sys_ = sys.platform
 
 
 class MyBili(QMainWindow):
@@ -28,15 +30,26 @@ class MyBili(QMainWindow):
     __POS = []
     # 记录每个视频对象
     __OBJECT = []
+    # 计数器(记录视频对象的下标)
+    __INDEX = 0
+
     def __init__(self):
         super(MyBili, self).__init__()
 
         self.__qss = QSS()
-        self.__titlepage = TitlePage()
+        self.__titlepage = TitlePage(sys_)
 
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)  # 无边框
         # 下载位置
-        self._downPos = ""
+        self._downPos = "./"
+        try:
+            with open("path.txt", "r") as f:
+                self._downPos = f.read()
+        except Exception:
+            with open("path.txt", "w") as f:
+                f.write("./")
+        # print("原始路径:",self._downPos)
+
         # 设置可以接受拖拽
         self.setAcceptDrops(True)
         self.setupUi()
@@ -48,7 +61,7 @@ class MyBili(QMainWindow):
         if event.button() == Qt.LeftButton:
             self.m_flag = True
             self.m_Position = event.globalPos() - self.pos()  # 获取鼠标相对窗口的位置
-            # print("m: ",self.m_Position)
+            # # print("m: ",self.m_Position)
             event.accept()
             self.setCursor(QCursor(Qt.OpenHandCursor))  # 更改鼠标图标
 
@@ -63,7 +76,7 @@ class MyBili(QMainWindow):
 
     # ----
     def dragEnterEvent(self, e: QtGui.QDragEnterEvent) -> None:
-        print(e)
+        # print(e)
 
         if e.mimeData().hasText():
 
@@ -83,14 +96,20 @@ class MyBili(QMainWindow):
     def dropEvent(self, e: QtGui.QDropEvent) -> None:
         # 获取网站
         html = e.mimeData().text()
+        # print("ee",html)
         # [0-9][0-9]|[0-9]  带修改正则
         rel = re.findall("BV(.*)\?p=([0-9][0-9]|[0-9])",html)
+        # 匹配普通的视频
         if not rel:
             rel = re.findall("BV(.*)\?", html)
         if not rel:
             rel = re.findall("bv(.*)\?",html)
+        # 匹配番剧
+        if not rel:
+            rel = re.findall("BV(.*)/?", html)
+            rel[0]=rel[0].replace(r"/","")
         # rel =["1qJ411N7Fc"]
-        # print("rel: ",rel)
+        # print("_rel: ",rel)
         # self.close()
         # 设置背景图片
         self.setStyleSheet(self.__qss.homeBackDropDefault())
@@ -101,12 +120,13 @@ class MyBili(QMainWindow):
         else:
             w = self.scrollAreaWidgetContents.width() - 10
 
-        # 获取下载路径, 并显示
-        path = self._downPos
-        if not path:
-            path = "."
+
+
+        # 设置封面下载路径
+        self.__titlepage.setPath(self._downPos)
         # 添加视频
         if not MyBili.__OBJECT:
+            # print("url:",rel)
             MyBili.__OBJECT.append(Video(rel[0],self.scrollAreaWidgetContents))
             # 区别普通视频和系统视频
             if len(rel[0]) == 1:
@@ -115,27 +135,56 @@ class MyBili(QMainWindow):
                 bv = rel[0][0]
             else:
                 bv = rel[0]
-            self.__titlepage.down(bv)
+            # print("bv:",bv)
 
-            MyBili.__OBJECT[0].backgroundColor(self.__titlepage.imgPath)        # 设置背景颜色
+            # 图片名称
+            imageName = MyBili.__OBJECT[MyBili.__INDEX].downOBJ().getVideoTile()
+            # print("imageName:", imageName)
+            if not imageName:
+                imageName = time.strftime("%Y_%m_%d_%H:%M", time.localtime())  # 当前日期和时间
+
+            self.__titlepage.down(bv,imgaeName=imageName)
+
+
+            MyBili.__OBJECT[0].backgroundColor(self.__titlepage.getPath())        # 设置背景颜色
             MyBili.__OBJECT[0].videoWidgetName(html)     # 设置标题名称
-            MyBili.__OBJECT[0].downOBJ().setDownloadPath(path)   # 设置下载路径
+            MyBili.__OBJECT[0].downOBJ().setDownloadPath(self._downPos)   # 设置下载路径
             # 视频关闭按钮事件
             MyBili.__OBJECT[0].sequence[str].connect(lambda :self.videoDel(10))
             MyBili.__OBJECT[0].setGeometry(QtCore.QRect(10, 200, w, 150))
             MyBili.__POS.append(10)
             MyBili.__OBJECT[0].show()
+            # 加一
         else:
             MyBili.__OBJECT.append(Video(rel[0],self.scrollAreaWidgetContents))  # type: Video
-            MyBili.__OBJECT[0].backgroundColor(self.__titlepage.imgPath)        # 设置背景颜色
+
+            # 区别普通视频和系统视频
+            if len(rel[0]) == 1:
+                bv = rel[0]
+            elif len(rel[0]) == 2:
+                bv = rel[0][0]
+            else:
+                bv = rel[0]
+            # 图片名称
+            imageName = MyBili.__OBJECT[MyBili.__INDEX].downOBJ().getVideoTile()
+            # print("imageName:", imageName)
+            if not imageName:
+                imageName = time.strftime("%Y_%m_%d_%H:%M", time.localtime())  # 当前日期和时间
+
+            self.__titlepage.down(bv, imgaeName=imageName)
+
+
+            MyBili.__OBJECT[-1].backgroundColor(self.__titlepage.getPath())        # 设置背景颜色
             MyBili.__OBJECT[-1].videoWidgetName(html)
-            MyBili.__OBJECT[-1].downOBJ().setDownloadPath(path)  # 设置下载路径
+            MyBili.__OBJECT[-1].downOBJ().setDownloadPath(self._downPos)  # 设置下载路径
             posw = MyBili.__POS[-1] + 128 + 10
             # 视频关闭按钮事件
             MyBili.__OBJECT[-1].sequence[str].connect(lambda :self.videoDel(posw))
             MyBili.__OBJECT[-1].setGeometry(QtCore.QRect(10, posw, w, 150))
             MyBili.__POS.append(posw)
             MyBili.__OBJECT[-1].show()
+
+        # print(MyBili.__OBJECT)
 
         # 排序
         self._videoSequence()
@@ -155,13 +204,13 @@ class MyBili(QMainWindow):
         for i in range(videoLen):
             # x = MyBili.__OBJECT[i].pos().x()
             # y = MyBili.__OBJECT[i].pos().y()
-            # print("移动前: ",MyBili.__OBJECT[i].pos().x())
+            # # print("移动前: ",MyBili.__OBJECT[i].pos().x())
             if i == 0:
                 MyBili.__OBJECT[i].move(10, temp)
             else:
                 temp += 138
                 MyBili.__OBJECT[i].move(10, temp)
-            # print("移动后: ", MyBili.__OBJECT[i].pos())
+            # # print("移动后: ", MyBili.__OBJECT[i].pos())
 
     # 视频删除，并释放
     def videoDel(self,indexNum):
@@ -170,14 +219,14 @@ class MyBili(QMainWindow):
         :param indexNum: 视频所在位置
         :return:
         '''
-        # print("排序：",indexNum)
+        # # print("排序：",indexNum)
         # 获取索引
-        # print("原始数组：",MyBili.__POS)
+        # # print("原始数组：",MyBili.__POS)
         index = MyBili.__POS.index(indexNum)
-        # print("索引值: ",index)
+        # # print("索引值: ",index)
         # 删除索引
         MyBili.__POS.pop(index)
-        # print("删除了:{},{}".format(indexNum,MyBili.__POS))
+        # # print("删除了:{},{}".format(indexNum,MyBili.__POS))
         # 释放对象
         MyBili.__OBJECT[index].close()
         # 删除对象
@@ -192,7 +241,7 @@ class MyBili(QMainWindow):
         if MyBili.__OBJECT:
             for obj_index in MyBili.__OBJECT:
                 obj_index.myrsize(self.scrollAreaWidgetContents.width() - 20)
-        # print(self.scrollAreaWidgetContents.width())
+        # # print(self.scrollAreaWidgetContents.width())
 
     # 设置标签颜色
     def _setPathStyle(self,color:str,text:str):
@@ -271,7 +320,9 @@ class MyBili(QMainWindow):
         self.btn.setStyleSheet(self.__qss.homedownPos())
 
         self.bel = QtWidgets.QLabel()
-        self.bel.setText("<span style='font-size: 12px;color: darkgrey;'>当前路径:./</span>")
+
+        self.bel.setText(self._setPathStyle("darkgrey", self._downPos))
+        # self.bel.setText("<span style='font-size: 12px;color: darkgrey;'>当前路径:./</span>")
 
         self.statusBar = QtWidgets.QStatusBar(self)
         self.statusBar.setObjectName("statusBar")
@@ -304,9 +355,29 @@ class MyBili(QMainWindow):
         if qm == QMessageBox.Yes:
             self.close()
 
-
+    # 设置视频存放路径
     def _showPath(self):
-        self._downPos = QFileDialog.getExistingDirectory(self,"存放位置",os.getcwd())
+        try:
+            with open("path.txt","r") as f:
+                path = f.read()
+            _oldPtah = ""
+            if path:
+                _oldPtah = path  # 保存以存在的路径
+                self._downPos = QFileDialog.getExistingDirectory(self, "存放位置", path)
+                # 如果用户打开文件后,取消,则self._downPos为空值,需要用存在的路径重新覆盖
+                if not self._downPos:
+                    self._downPos = _oldPtah
+            else:
+                self._downPos = QFileDialog.getExistingDirectory(self, "存放位置", os.getcwd())
+                # 如果用户打开文件后,取消,则self._downPos为空值,需要赋值
+                if not self._downPos:
+                    self._downPos="./"
+        except Exception:
+            self._downPos = QFileDialog.getExistingDirectory(self, "存放位置", os.getcwd())
+        # 更改路径
+        with open("path.txt", "w") as f:
+            f.write(self._downPos)
+
         if MyBili.__OBJECT:
             self.bel.setText(self._setPathStyle("darkgrey",self._downPos))
         else:

@@ -5,6 +5,12 @@
 
 import requests
 import re
+import urllib3
+import USER_AGENT
+from IPAgent import IPagent
+
+# 消除 已经关闭认证（verify=False）情况下，控制台会输出以下错误
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
 # 获取B站视频封面类
@@ -12,66 +18,91 @@ class TitlePage:
     URL = str
     def __init__(self, user_agent="macOS"):
 
-        self.imageUrl = ""
-        self.path = ""
-        self.imgPath = ""
+        self._imageUrl = ""
+        self._imgPath = ""
 
         # 根据当前系统使用不同的 用户代理
-        self._user_agent: str
-        if user_agent == "macOS":
-            self._user_agent = "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_6) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/86.0.4240.80 Safari/537.36"
-        elif user_agent == "windows":
-            self._user_agent = "Mozilla/5.0 (Windows; U; Windows NT 6.1; en-us) AppleWebKit/534.50 (KHTML, like Gecko) Version/5.1 Safari/534.50"
+        self._user_agent = USER_AGENT.get_user_agent()
+        # 代理ip池对象
+        self._ip = IPagent()
+
+
+    # 设置路径
+    def setPath(self,path:str):
+        if path:
+            if not (path[-1] == "/"):
+                self._imgPath = path+r"/"
+        else:
+            self._imgPath = "./"
+
+    # 获取路径
+    def getPath(self):
+        return self._imgPath
 
     # 获取网页文本
     def getHtml(self,baseurl)->str:
         head = {  # 模拟浏览器身份头向对方发送消息
             "user-agent": self._user_agent
         }
+        # 使用代理ip
+        http = self._ip.getIP()
+        if http:
+            proxies = {
+                http["type"]: '{}:{}'.format(http["ip"], http["port"])
+            }
+        else:
+            proxies = {}
         try:
-            response = requests.get(url=baseurl, headers=head)
+            response = requests.get(url=baseurl, headers=head, verify=False,proxies=proxies)
             # 200表示服务器接受请求，会传回网页源代码，所以把文本内容传回来就行了
             if response.status_code == 200:
-                # print(response.text)
+                # # print(response.text)
                 return response.text
         except:
-            print("请求失败")
+            pass
+            # print("请求失败")
 
     # 获取图片链接
     def getImageUrl(self,htmlText:str):
         temp = re.findall("itemprop=\"image\" content=\"(http://i.*?.png)\">",htmlText)
-        if temp:
-            if len(temp[0]) < 80:
-                self.imageUrl = temp
+        # # print("图片链接:",temp)
+        try:
+            if temp:
+                if len(temp[0]) < 80:
+                    self._imageUrl = temp
+                else:
+                    self._imageUrl = re.findall("itemprop=\"image\" content=\"(http://i.*?.jpg)\">", htmlText)
             else:
-                self.imageUrl = re.findall("itemprop=\"image\" content=\"(http://i.*?.jpg)\">", htmlText)
-        else:
-            if len(temp[0]) < 80:
-                self.imageUrl = re.findall("itemprop=\"image\" content=\"(http://i.*?.jpg)\">",htmlText)
-            else:
-                self.imageUrl = re.findall("itemprop=\"image\" content=\"(http://i.*?.png)\">",htmlText)
-        print(self.imageUrl)
+                if len(temp[0]) < 80:
+                    self._imageUrl = re.findall("itemprop=\"image\" content=\"(http://i.*?.jpg)\">",htmlText)
+                else:
+                    self._imageUrl = re.findall("itemprop=\"image\" content=\"(http://i.*?.png)\">",htmlText)
+            # print(self._imageUrl)
+        except Exception:
+            pass
+            # print("无法获取封面")
 
     # 下载图片
-    def downImage(self,path:str="./",imgaeName="temp"):
+    def downImage(self,imgaeName="temp"):
         try:
-            self.path = path
-            t = requests.get(self.imageUrl[0])
+
+            t = requests.get(self._imageUrl[0])
             # 图片路径
-            self.imgPath = path+imgaeName+".jpg"
-            with open(self.imgPath, "wb") as f:
+            self._imgPath += (imgaeName+".jpg")
+            # print("路径:",self._imgPath)
+            with open(self._imgPath, "wb") as f:
                 f.write(t.content)
         except Exception as e:
-            print("[错误_封面获取001]",e)
-            print("下载失败!")
+            pass
+            # print("[错误_封面获取001]",e)
+            # print("封面下载失败!")
 
     # 简化以上3步
-    def down(self, bv:str, p:int = 1, path:str = "./",imgaeName="temp"):
-        self.path = path
+    def down(self, bv:str, p:int = 1,imgaeName="temp"):
         baseurl = "https://www.bilibili.com/video/BV" + str(bv) + "?p=" + str(p)
         html = self.getHtml(baseurl)
         self.getImageUrl(html)
-        self.downImage(path=path,imgaeName=imgaeName)
+        self.downImage(imgaeName=imgaeName)
 
 if __name__ == '__main__':
     v = TitlePage()
