@@ -357,14 +357,12 @@ class BliVideoDownlod:
         # 重命名输出视频
         # print("self._outVidePath:", self._outVidePath)
         # print("p_:", self._path + "/" + self._outVideName.split("out_")[-1])
-        os.rename(self._outVidePath, self._path + "/" + self._outVideName.split("out_")[-1])
         try:
-
-
 
             if not self._isBase:
                 # 不需要音频
                 os.unlink(self._bvPath["base"])
+            os.rename(self._outVidePath, self._path + "/" + self._outVideName.split("out_")[-1])
         except Exception as e:
             # print("ee:",e)
             return False
