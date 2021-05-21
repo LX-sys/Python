@@ -217,7 +217,7 @@ class BliVideoDownlod:
         # # print(("开始下载--->")+title)
         # 去除视频名称的特殊符号
         # 无法获取系统视频中的子标题名称(BUG)
-        title = title.replace("|","").replace(" ","")
+        title = title.replace(",","").replace("=","").replace("&","")
         self._videoTile = title
         # print("标签:",self._videoTile)
         # print("v-: ",self._videoTile)
