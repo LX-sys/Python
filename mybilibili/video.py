@@ -132,30 +132,31 @@ class Video(QFrame):
         self.setMinimumWidth(400)
         self.setMinimumHeight(128)
         self.setMaximumHeight(128)
-        qss = '''
-        QWidget{
-	border-radius: 6px;
-	border-image:url(%s/test2.jpg);
-}
-QWidget:hover{
-	border: 2px solid #357892;
-	border-image:url(%s/test2.jpg);
-}
+#         qss = '''
+#         QWidget{
+# 	border-radius: 6px;
+# 	border-image:url(%s/test2.jpg);
+# }
+# QWidget:hover{
+# 	border: 2px solid #357892;
+# 	border-image:url(%s/test2.jpg);
+# }
 
-QPushButton,QLabel,QComboBox,QProgressBar{
-	background-color: rgba(255, 255, 255, 0);
-	border-image:none;
-}
+# QPushButton,QLabel,QComboBox,QProgressBar{
+# 	background-color: rgba(255, 255, 255, 0);
+# 	border-image:none;
+# }
 
-QPushButton:hover,QLabel:hover,QComboBox:hover{
-	border:none;
-	border-image:none;
-}
-QProgressBar:hover{
-border-image:none;
-}
-'''%(os.getcwd(),os.getcwd())
-        self.setStyleSheet(qss)
+# QPushButton:hover,QLabel:hover,QComboBox:hover{
+# 	border:none;
+# 	border-image:none;
+# }
+# QProgressBar:hover{
+# border-image:none;
+# }
+# '''%(os.getcwd(),os.getcwd())
+#         self.setStyleSheet(qss)
+	self.backgroundColor()
         self.progressBar = QtWidgets.QProgressBar(self)
         self.progressBar.setGeometry(QtCore.QRect(1, 86, 571, 23))
         self.progressBar.setMinimumSize(QtCore.QSize(0, 0))
@@ -329,16 +330,31 @@ border-image:none;
     # 设置背景颜色(随机生成),给主窗口调用
     def backgroundColor(self,imagePath:str="test2.jpg"):
         import random
-        qss = '''
-                QWidget{
-        	border-radius: 6px;
-        	border-image:url(%s);
-        }
-        QWidget:hover{
-        	border: 2px solid #357892;
-        	border-image:url(%s);
-        }
+        if "." in imagePath:
+            qss = '''
+                            QWidget{
+                    	border-radius: 6px;
+                    	border-image:url(%s);
+                    }
+                    QWidget:hover{
+                    	border: 2px solid #357892;
+                    	border-image:url(%s);
+                    }
+                    ''' % (imagePath, imagePath)
+        else:
+            qss = '''
+                            QWidget{
+                    	border-radius: 6px;
+                    	background-color: rgb(%d, %d, %d);
+                    }
+                    QWidget:hover{
+                    	border: 2px solid #357892;
+                    	background-color: rgb(%d, %d, %d);
+                    }
+                    ''' % (random.randint(0,244),random.randint(0,244),random.randint(0,244),
+                           random.randint(0,244),random.randint(0,244),random.randint(0,244))
 
+        qss_='''
         QPushButton,QLabel,QComboBox,QProgressBar{
         	background-color: rgba(255, 255, 255, 0);
         	border-image:none;
@@ -351,8 +367,8 @@ border-image:none;
         QProgressBar:hover{
         border-image:none;
     }
-        '''%(imagePath,imagePath)
-        # %(random.randint(0,244),random.randint(0,244),random.randint(0,244))
+        '''
+        qss += qss_
         self.setStyleSheet(qss)
 
     # 窗口改变
