@@ -4,7 +4,12 @@
 
 '''
 
+import os
+import sys
 
+# path = os.path.dirname(os.path.dirname(os.path.realpath(sys.executable)))
+# 绝对路径
+absolutePath = os.path.dirname(sys.argv[0])
 # 样式类
 class QSS:
     '''
@@ -16,10 +21,10 @@ class QSS:
 
     # 主页默认背景
     def homeBackDropDefault(self):
-        return "QMainWindow{border-image:url(image/home_Backdrop/home_back1.png);}"
+        return "QMainWindow{border-image:url(%s/image/home_Backdrop/home_back1.png);}"%absolutePath
     # 主页加载视频时的背景
     def homeBackDropIng(self):
-        return "QMainWindow{border-image:url(image/home_Backdrop/home_backing.png);}"
+        return "QMainWindow{border-image:url(%s/image/home_Backdrop/home_backing.png);}"%absolutePath
 
     # 主页关闭按钮
     def homeCloseButton(self):
@@ -31,9 +36,9 @@ class QSS:
         QPushButton:hover{
             background-color: rgb(223, 104, 104);
             border-radius: 7px;
-            border-image:url(image/home_close_btn/home_close_btn.png);
+            border-image:url(%s/image/home_close_btn/home_close_btn.png);
         }
-        '''
+        '''%absolutePath
         return c
 
     # 主页最小化按钮
@@ -46,9 +51,9 @@ class QSS:
                 QPushButton:hover{
                     background-color: #efe466;
                     border-radius: 7px;
-                    border-image:url(image/home_min_btn/homeminbtn.png);
+                    border-image:url(%s/image/home_min_btn/homeminbtn.png);
                 }
-                '''
+                '''%absolutePath
         return c
 
 
@@ -57,10 +62,10 @@ class QSS:
         c = '''
                 QPushButton{
                     border:none;
-                    border-image:url(image/home_downPos/downPos.png);
+                    border-image:url(%s/image/home_downPos/downPos.png);
 
                 }
-                '''
+                '''%absolutePath
         return c
 
     def homeScrollAreaStyle(self):
@@ -91,25 +96,25 @@ class QSS:
             background-color: rgb(255, 255, 255);
             border:2px solid red;
             border-radius: 7px;
-            border-image:url(image/home_close_btn/home_close_btn.png);
-        }'''
+            border-image:url(%s/image/home_close_btn/home_close_btn.png);
+        }'''%absolutePath
         return c
 
     # 小视频设置按钮
     def videoSetingButton(self):
         c = '''
         QPushButton{
-            border-image:url(image/videoSeting/videoSeting2.png);
+            border-image:url(%s/image/videoSeting/videoSeting2.png);
         }
-        '''
+        '''%absolutePath
         return c
 
     # 小视频开始按钮
     def videoStartButton(self):
-        return "QPushButton{border-image:url(image/videoPlayBtn/videoStartBtn.png);}"
+        return "QPushButton{border-image:url(%s/image/videoPlayBtn/videoStartBtn.png);}"%absolutePath
     # 小视频暂停按钮
     def videoStopButton(self):
-        return "QPushButton{border-image:url(image/videoPlayBtn/videoStopBtn.png);}"
+        return "QPushButton{border-image:url(%s/image/videoPlayBtn/videoStopBtn.png);}"%absolutePath
 
     # 小视频comboBox(下拉框)
     def videoComboBox(self):
@@ -125,3 +130,7 @@ class QSS:
         } 
         '''
         return c
+
+if __name__ == '__main__':
+    c=QSS()
+    print(c.homeBackDropDefault())

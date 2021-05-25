@@ -7,6 +7,8 @@ import requests
 from pyquery import PyQuery as pq
 import re
 import json
+import time
+requests.packages.urllib3.disable_warnings()
 
 def getHtml(baseurl):
     head = {    #模拟浏览器身份头向对方发送消息
@@ -23,21 +25,25 @@ def getHtml(baseurl):
 # 传入网址、p序列号。这里说明一下，我下载的视频在下载系列时直接用p号命名，方便起见所以这个函数要用p号
 def getVideo(baseurl,p):
     html = getHtml(baseurl)
+    c=re.findall(r'''"baseUrl":"(.*?)"''', html, re.S)[-2]
+    # print(c)
     doc = pq(html)		# pyquery库语法简洁些，所以先采用pyquery库
     title = doc('#viewbox_report > h1 > span').text()	# 设置视频标题获取规则
     pattern = r'\<script\>window\.__playinfo__=(.*?)\</script\>'	# 设置类的获取规则
     result = re.findall(pattern, html)[0]
     temp = json.loads(result)
+    print(temp)
     print(("开始下载--->")+title)
     title = str(p)
-    try:
-        video_url = temp['data']['dash']['video'][0]['baseUrl']
-        audio_url = temp['data']['dash']['audio'][0]['baseUrl']
-        fileDownload(homeurl=baseurl, url=video_url, title=title, typ=0)
-        fileDownload(homeurl=baseurl, url=audio_url, title=title, typ=1)
-    except Exception:
-        video_url = temp['data']['durl'][0]['url']
-        fileDownload(homeurl=baseurl, url=video_url, title=title, typ=0)
+    video_url = temp['data']['dash']['video'][0]['baseUrl']
+    audio_url = temp['data']['dash']['audio'][0]['baseUrl']
+    fileDownload(homeurl=baseurl, url=video_url, title=title, typ=0)
+    fileDownload(homeurl=baseurl, url=c, title=title, typ=1)
+    # try:
+    #
+    # except Exception:
+    #     video_url = temp['data']['durl'][0]['url']
+    #     fileDownload(homeurl=baseurl, url=video_url, title=title, typ=0)
 
 def fileDownload(homeurl, url, title, typ):
     # 添加请求头键值对,写上 refered:请求来源
@@ -83,7 +89,7 @@ def fileDownload(homeurl, url, title, typ):
     print("大小: ",temp)
 
 def main():
-    print("bilibili下载")
+    print("B站视频下载器")
     bv=input("输入视频bv号: ")
     judge = input("你想获得一系列(y)视频还是一个单一(N)视频?\n[y/N]\n")
     if judge == "y" or judge == "Y":

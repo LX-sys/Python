@@ -8,6 +8,8 @@ import re
 import urllib3
 import USER_AGENT
 from IPAgent import IPagent
+import os
+import sys
 
 # 消除 已经关闭认证（verify=False）情况下，控制台会输出以下错误
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
@@ -33,7 +35,8 @@ class TitlePage:
             if not (path[-1] == "/"):
                 self._imgPath = path+r"/"
         else:
-            self._imgPath = "./"
+            # 当前路径
+            self._imgPath = os.path.dirname(sys.argv[0])
 
     # 获取路径
     def getPath(self):

@@ -15,8 +15,9 @@ import time
 import json
 import random
 import threading
-
-
+import os
+import sys
+absolutePath = os.path.dirname(sys.argv[0])
 
 # 检测ip是否可用
 # def test_ip(ip,port):
@@ -119,7 +120,7 @@ class IPagent(IPAgentABC):
             self.readIPS()
         except Exception:
             pass
-            # print("还未创建ip.json")
+            # print("还未创建%s/ip.json")
         # 可用ip数量
         self._yesIPNumber = 4
         # 匹配ip结构的正则表达式
@@ -200,21 +201,21 @@ class IPagent(IPAgentABC):
     def sourceHtml(self,url:str="https://www.kuaidaili.com/free/inha/%s/",pageStart=50,pageEnd=53):
         # 这部分代码记录当前访问的页数,自行循环
         try:
-            with open("numpage.json","r") as f:
+            with open("%s/numpage.json"%absolutePath,"r") as f:
                 page_=json.load(f)
             if page_["e"] + 51 > 4000:
                 page = {"s": 1, "e": 51}
-                with open("numpage.json", "w") as f:
+                with open("%s/numpage.json"%absolutePath, "w") as f:
                     json.dump(page, f)
             else:
                 page = {"s": page_["e"], "e": page_["e"]+20}
-                with open("numpage.json", "w") as f:
+                with open("%s/numpage.json"%absolutePath, "w") as f:
                     json.dump(page, f)
         except Exception:
             page = {"s": pageStart, "e": pageEnd}
             if pageEnd +50 > 4000:
                 page = {"s": 1, "e": 51}
-            with open("numpage.json","w") as f:
+            with open("%s/numpage.json"%absolutePath,"w") as f:
                 json.dump(page,f)
 
         pageStart,pageEnd = page_["s"],page_["e"]
@@ -238,23 +239,23 @@ class IPagent(IPAgentABC):
 
     def readIPS(self,ip:list=None):
         try:
-            with open("ip.json", "r") as f:
+            with open("%s/ip.json"%absolutePath, "r") as f:
                 self._yesIPList = json.load(f)
         except Exception:
             # print("创建")
-            with open("ip.json","w") as f:
-                pass
+            with open("%s/ip.json"%absolutePath,"w") as f:
+                json.dump(dict(),f)
         # 检测ip
         # # print("ppp->",self._yesIPList)
         self.IPs(self._yesIPList)
-        # 可用代理ip小于2自动增加代理ip
+        # 可用代理ip小于self._ipMin自动增加代理ip
         if self._yesIPNumber < self._ipMin:
             self.sourceHtml()
 
     def writeIPs(self,ip:[list,dict]=None):
         # # print("writeIPs->")
         if not ip:
-            with open("ip.json", "r") as f:
+            with open("%s/ip.json"%absolutePath, "r") as f:
                 try:
                     tempdict = json.load(f)
                 except Exception as e:
@@ -264,8 +265,8 @@ class IPagent(IPAgentABC):
             # 字典合并
             self._yesIPList.update(tempdict)
             # # print("-------------")
-        with open("ip.json", "w") as f:
-            # print("ip.json")
+        with open("%s/ip.json"%absolutePath, "w") as f:
+            # print("%s/ip.json")
             json.dump(self._yesIPList,f)
         # # print("<-writeIPs")
 
@@ -307,7 +308,6 @@ class IPagent(IPAgentABC):
 
         self._yesIPNumber = len(self._yesIPList)
         if self._yesIPList:
-
             self.writeIPs(self._yesIPList)
 
 
@@ -332,6 +332,6 @@ if __name__ == '__main__':
     # p = IPagent()
     # p.sourceHtml()
     # p.readIPS()
-    # # print(p.getIP())
+    # print(p.getIP())
 
     pass

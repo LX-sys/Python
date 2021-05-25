@@ -1,10 +1,11 @@
 # -*- mode: python ; coding: utf-8 -*-
 
+
 block_cipher = None
 
 
 a = Analysis(['QSS.py'],
-             pathex=['/Users/lx/Documents/git/mybilibili'],
+             pathex=['/Applications/Python 3.8/save/mybilibili'],
              binaries=[],
              datas=[],
              hiddenimports=[],

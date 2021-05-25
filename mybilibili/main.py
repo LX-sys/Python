@@ -41,13 +41,14 @@ class MyBili(QMainWindow):
 
         self.setWindowFlags(Qt.FramelessWindowHint | Qt.WindowStaysOnTopHint)  # 无边框
         # 下载位置
-        self._downPos = "./"
+        self._downPos = os.path.dirname(sys.argv[0])+"/"
+        print(self._downPos)
         try:
             with open("path.txt", "r") as f:
                 self._downPos = f.read()
         except Exception:
             with open("path.txt", "w") as f:
-                f.write("./")
+                f.write(os.path.dirname(sys.argv[0])+"/")
         # print("原始路径:",self._downPos)
 
         # 设置可以接受拖拽
@@ -368,10 +369,11 @@ class MyBili(QMainWindow):
                 if not self._downPos:
                     self._downPos = _oldPtah
             else:
+
                 self._downPos = QFileDialog.getExistingDirectory(self, "存放位置", os.getcwd())
                 # 如果用户打开文件后,取消,则self._downPos为空值,需要赋值
                 if not self._downPos:
-                    self._downPos="./"
+                    self._downPos = os.path.dirname(sys.argv[0])+"/"
         except Exception:
             self._downPos = QFileDialog.getExistingDirectory(self, "存放位置", os.getcwd())
         # 更改路径
@@ -398,6 +400,8 @@ class MyBili(QMainWindow):
 
 if __name__ == '__main__':
     app = QApplication(sys.argv)
+
     ui = MyBili()
     ui.show()
+
     sys.exit(app.exec_())

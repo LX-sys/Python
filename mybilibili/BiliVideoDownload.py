@@ -20,7 +20,7 @@ from IPAgent import IPagent
 urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
 
 
-# print(os.getcwd())
+# # print(os.getcwd())
 
 
 
@@ -62,6 +62,7 @@ class BliVideoDownlod:
         self._user_agent = USER_AGENT.get_user_agent()
         # 代理ip池对象
         self._ip = IPagent()
+        # # print("obj:",id(self))
 
 
     # 设置是否需要音频
@@ -77,9 +78,9 @@ class BliVideoDownlod:
             :return:
             """
         # 提取后缀
-
+        # print("F:",file_name,"mp3:",mp3_file)
         outfile_name = "out_"+file_name.split('/')[-1]
-        # print("out:",outfile_name)
+        # # print("out:",outfile_name)
         # 输出视频名称
         self._outVideName = outfile_name
         self._outVideName = self._outVideName.replace(" ","")
@@ -107,11 +108,11 @@ class BliVideoDownlod:
             obj.communicate()
             out_temp.seek(0)
             # lines = out_temp.readlines()
-            # # print(lines)
+            # # # print(lines)
         except Exception as e:
-            # print("e",e)
+            # # print("e",e)
             pass
-            # # print(traceback.format_exc())
+            # # # print(traceback.format_exc())
         finally:
             if out_temp:
                 out_temp.close()
@@ -186,11 +187,12 @@ class BliVideoDownlod:
                 return response.text
         except:
             pass
-            # print("请求失败")
+            # # print("请求失败")
     
     def _getVideo(self,baseurl,p):
+        global audio_url
         html = self._getHtml(baseurl)
-        # print(html)
+        # # print(html)
         doc = pq(html)		# pyquery库语法简洁些，所以先采用pyquery库
         title = doc('#viewbox_report > h1 > span').text()	# 设置普通视频标题获取规则
         # 获取番剧的标题
@@ -202,30 +204,28 @@ class BliVideoDownlod:
             title = subTitle[int(p) - 1]
 
         pattern = r'\<script\>window\.__playinfo__=(.*?)\</script\>'	# 设置类的获取规则
-        # print("y:",re.findall(pattern, html))
+        # # print("y:",re.findall(pattern, html))
         try:
             result = re.findall(pattern, html)[0]
         except Exception:
             result = re.findall(r"readyVideoUrl: '(.*)',",html)[0]
-            # print("报错",result)
+            # # print("报错",result)
 
 
             # result = re.findall(pattern, html)[0]
-        # # print("yy:", result)
+        # # # print("yy:", result)
         temp = json.loads(result)
-        # # print("temp:",temp)
-        # # print(("开始下载--->")+title)
-        # 去除视频名称的特殊符号
+        # # # print("temp:",temp)
+        # # # print(("开始下载--->")+title)
+        # 去除视频名称的特殊符号,只保留汉字,字母,数字
         # 无法获取系统视频中的子标题名称(BUG)
-        title = title.replace("|","").replace(" ","")
+        title = re.sub(u"([^\u4e00-\u9fa5\u0030-\u0039\u0041-\u005a\u0061-\u007a])","",title)
         self._videoTile = title
-        # print("标签:",self._videoTile)
-        # print("v-: ",self._videoTile)
-
+        # # print("标签:",self._videoTile)
         # title = str(p)
         try:
             video_url = temp['data']['dash']['video'][0]['baseUrl']
-            # print("vudlc:", video_url)
+            # # print("vudlc:", video_url)
             audio_url = temp['data']['dash']['audio'][0]['baseUrl']
             headers = {
                 "user-agent": self._user_agent
@@ -238,23 +238,33 @@ class BliVideoDownlod:
                 }
             else:
                 proxies = dict()
-            v = requests.get(url=video_url, headers=headers, verify=False,timeout=(3,7),proxies=proxies)
-            b = requests.get(url=audio_url, headers=headers, verify=False,timeout=(3,7),proxies=proxies)
-            # print("<------>")
+            b = requests.get(url=audio_url, headers=headers, verify=False, timeout=(3, 7), proxies=proxies)
+            # print("<>")
+            v = requests.get(url=video_url, headers=headers, verify=False, timeout=(3, 7), proxies=proxies)
+            # # print("<------>")
             self._videSize = len(v.content)   # 视频大小
             self._baseSize = len(b.content)   # 音频大小
             self._Szie = self._videSize + self._baseSize
-            # print("视频总大小:", self._Szie)
+            # # print("视频总大小:", self._Szie)
 
             self._fileDownload(homeurl=baseurl, url=video_url, title=self._videoTile, typ=0)
+            # print("0")
             self._fileDownload(homeurl=baseurl, url=audio_url, title=self._videoTile, typ=1)
+            # print("1")
         except Exception as e:
-            pass
             # print("报错编号 002")
             # print(e)
-            # print("vudl:",video_url)
+            try:
+                # 一秒后再次尝试
+                time.sleep(1)
+                self._fileDownload(homeurl=baseurl, url=audio_url, title=self._videoTile, typ=1)
+                # print("111")
+            except Exception:
+                pass
+            # # print("vudl:",video_url)
             # video_url = temp['data']['durl'][0]['url']
             # self._fileDownload(homeurl=baseurl, url=video_url, title=self._videoTile, typ=0)
+            pass
 
 
     # 暂停/开始
@@ -266,6 +276,7 @@ class BliVideoDownlod:
         self._closeDown = down
 
     def _fileDownload(self,homeurl, url, title, typ):
+        # print("typ:",typ)
         # 添加请求头键值对,写上 refered:请求来源
         headers = {
             "user-agent": self._user_agent
@@ -276,6 +287,7 @@ class BliVideoDownlod:
         if typ == 0:
             filename = self._path + "/" + title + ".flv"
             self._bvPath["video"] = filename
+            # self._bvPath["base"] = self._path + "/" + title + ".mp3"
             # print("v:",filename)
         else:
             filename = self._path + "/" + title + ".mp3"
@@ -285,14 +297,14 @@ class BliVideoDownlod:
         # 指定每次下载1M的数据
         begin = 0
         end = 1024 * 1024 - 1
-        # # print(end)
+        # # # print(end)
         flag = 0
         temp = 0
         btemp = 0
         while True:
 
             if self._closeDown:
-                # print("关闭下载")
+                # # print("关闭下载")
                 break
             if self._stop:
                 # 添加请求头键值对,写上 range:请求字节范围
@@ -324,7 +336,7 @@ class BliVideoDownlod:
                 with open(filename, 'ab') as fp:
                     fp.write(res.content)
                     fp.flush()
-                    # # print("下载:",round(temp/self._Szie, 2)*100)
+                    # # # print("下载:",round(temp/self._Szie, 2)*100)
                     self._percentage = round(temp/self._Szie, 2)*100
 
                 if flag == 1:
@@ -339,7 +351,7 @@ class BliVideoDownlod:
         :param vNumber: 下载视频数量, 默认是1
         :return:
         '''
-        # print("B站视频下载器\n")
+        # # print("B站视频下载器\n")
         if judge:
             for p in range(vNumber):
                 baseurl = "https://www.bilibili.com/video/BV" + str(bv) + "?p=" + str(p)
@@ -348,38 +360,38 @@ class BliVideoDownlod:
             # p = input("如果是系列视频，请任选一集输入视频p号<------>如果不是系列视频，请输入'1'\n")
             baseurl = "https://www.bilibili.com/video/BV" + str(bv) + "?p=" + str(vNumber)
             self._getVideo(baseurl, vNumber)
-        # print("下载完毕")
-        # print("音频视频融合开始")
+        # # print("下载完毕")
+        # # print("音频视频融合开始")
         self.baseVideo(file_name=self._bvPath["video"],mp3_file=self._bvPath["base"])
         # print("融合完成")
-        # 删除文件(正在使用会报错)
-        os.unlink(self._bvPath["video"])
+        # print("base:",self._bvPath)
         # 重命名输出视频
-        # print("self._outVidePath:", self._outVidePath)
-        # print("p_:", self._path + "/" + self._outVideName.split("out_")[-1])
-        os.rename(self._outVidePath, self._path + "/" + self._outVideName.split("out_")[-1])
+        # # print("self._outVidePath:", self._outVidePath)
+        # # print("p_:", self._path + "/" + self._outVideName.split("out_")[-1])
         try:
-
-
 
             if not self._isBase:
                 # 不需要音频
+                # # print("c>",self._bvPath["base"])
                 os.unlink(self._bvPath["base"])
+            os.rename(self._outVidePath, self._path + "/" + self._outVideName.split("out_")[-1])
         except Exception as e:
-            # print("ee:",e)
+            # 删除文件(正在使用会报错)
+            os.unlink(self._bvPath["video"])
+            # # print("ee:",e)
             return False
-        self.info()
+        # self.info()
         return True
 
     def info(self):
         pass
-        # print("视频标题:",self.getVideoTile())
-        # print("视频大小:",self.getVideoSize())
-        # print("音频大小:",self.getBaseSize())
-        # print("总大小:",self.getSize())
-        # print("下载路径:",self._path)
-        # print("音频视频路径:",self._bvPath)
-        # print("视频MB(总的):",self.getMB())
+        # # print("视频标题:",self.getVideoTile())
+        # # print("视频大小:",self.getVideoSize())
+        # # print("音频大小:",self.getBaseSize())
+        # # print("总大小:",self.getSize())
+        # # print("下载路径:",self._path)
+        # # print("音频视频路径:",self._bvPath)
+        # # print("视频MB(总的):",self.getMB())
         
 
 if __name__ == '__main__':
