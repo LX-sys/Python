@@ -142,12 +142,20 @@ class Video(QFrame):
 # 	border: 2px solid #357892;
 # 	border-image:url(%s/test2.jpg);
 # }
+<<<<<<< HEAD
 #
+=======
+
+>>>>>>> 4bec325115558d3a2413bece6728e67da3508154
 # QPushButton,QLabel,QComboBox,QProgressBar{
 # 	background-color: rgba(255, 255, 255, 0);
 # 	border-image:none;
 # }
+<<<<<<< HEAD
 #
+=======
+
+>>>>>>> 4bec325115558d3a2413bece6728e67da3508154
 # QPushButton:hover,QLabel:hover,QComboBox:hover{
 # 	border:none;
 # 	border-image:none;
@@ -157,7 +165,11 @@ class Video(QFrame):
 # }
 # '''%(os.getcwd(),os.getcwd())
 #         self.setStyleSheet(qss)
+<<<<<<< HEAD
         self.backgroundColor()
+=======
+	self.backgroundColor()
+>>>>>>> 4bec325115558d3a2413bece6728e67da3508154
         self.progressBar = QtWidgets.QProgressBar(self)
         self.progressBar.setGeometry(QtCore.QRect(1, 86, 571, 23))
         self.progressBar.setMinimumSize(QtCore.QSize(0, 0))
